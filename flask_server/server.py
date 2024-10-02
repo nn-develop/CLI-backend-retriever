@@ -9,9 +9,19 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 logging.basicConfig(level=logging.INFO)
 
 class FileMetadata:
-    """Class representing the metadata of a file."""
+    """Represents the metadata of a file."""
     
     def __init__(self, uuid, create_datetime, size, mimetype, name, path):
+        """
+        Initialize file metadata.
+
+        :param uuid: UUID of the file.
+        :param create_datetime: Creation date and time of the file.
+        :param size: Size of the file in bytes.
+        :param mimetype: MIME type of the file.
+        :param name: Name of the file.
+        :param path: Path to the file on disk.
+        """
         self.uuid = uuid
         self.create_datetime = create_datetime
         self.size = size
@@ -20,7 +30,11 @@ class FileMetadata:
         self.path = path
 
     def to_dict(self) -> dict:
-        """Return the metadata of the file as a dictionary."""
+        """
+        Return the metadata of the file as a dictionary.
+        
+        :return: Dictionary representation of file metadata.
+        """
         return {
             "create_datetime": self.create_datetime,
             "size": self.size,
@@ -29,43 +43,79 @@ class FileMetadata:
         }
 
 class FileService:
-    """Class providing services for managing files."""
+    """Provides services for managing files."""
     
     def __init__(self, files_metadata: dict = None):
+        """
+        Initialize the file service with metadata.
+
+        :param files_metadata: Dictionary of file metadata.
+        """
         self.files_metadata = files_metadata or {}
 
     def add_file_metadata(self, file_metadata: FileMetadata) -> None:
-        """Add a new file's metadata."""
+        """
+        Add a new file's metadata.
+
+        :param file_metadata: Metadata of the file to be added.
+        """
         self.files_metadata[file_metadata.uuid] = file_metadata
 
     def delete_file_metadata(self, uuid: str) -> None:
-        """Delete a file's metadata by its UUID."""
+        """
+        Delete a file's metadata by its UUID.
+
+        :param uuid: UUID of the file to be deleted.
+        """
         self.files_metadata.pop(uuid, None)
 
     def get_file_metadata(self, uuid: str) -> FileMetadata:
-        """Return the metadata of a file by its UUID."""
+        """
+        Return the metadata of a file by its UUID.
+
+        :param uuid: UUID of the file.
+        :return: FileMetadata instance or None if not found.
+        """
         return self.files_metadata.get(uuid)
 
     def file_exists(self, uuid: str) -> bool:
-        """Check if the file exists by its UUID."""
+        """
+        Check if the file exists by its UUID.
+
+        :param uuid: UUID of the file.
+        :return: True if the file exists, False otherwise.
+        """
         file_data = self.get_file_metadata(uuid)
         return file_data and os.path.exists(file_data.path)
 
 class FileAPI:
-    """Class that handles API routes for file operations."""
+    """Handles API routes for file operations."""
 
     def __init__(self, app: Flask, file_service: FileService):
+        """
+        Initialize the FileAPI with a Flask app and file service.
+
+        :param app: Flask application instance.
+        :param file_service: FileService instance to manage files.
+        """
         self.app = app
         self.file_service = file_service
         self.register_routes()
 
     def register_routes(self) -> None:
-        """Register all the API endpoints."""
+        """
+        Register all API endpoints.
+        """
         self.app.add_url_rule('/file/<uuid>/stat/', view_func=self.file_stat, methods=['GET'])
         self.app.add_url_rule('/file/<uuid>/read/', view_func=self.read_file, methods=['GET'])
 
     def file_stat(self, uuid: str):
-        """Endpoint for retrieving the metadata of a file."""
+        """
+        Endpoint for retrieving the metadata of a file.
+
+        :param uuid: UUID of the file.
+        :return: JSON response with file metadata or 404 if not found.
+        """
         file_data = self.file_service.get_file_metadata(uuid)
         
         if file_data:
@@ -75,7 +125,12 @@ class FileAPI:
             abort(404, description=f"File with UUID {uuid} not found.")
 
     def read_file(self, uuid: str):
-        """Endpoint for reading the content of a file."""
+        """
+        Endpoint for reading the content of a file.
+
+        :param uuid: UUID of the file.
+        :return: File response for download or 404 if not found.
+        """
         file_data = self.file_service.get_file_metadata(uuid)
         
         if file_data:
@@ -85,6 +140,12 @@ class FileAPI:
 
             @after_this_request
             def close_file(response):
+                """
+                Close the file stream after the request is complete.
+
+                :param response: Response object.
+                :return: Modified response object.
+                """
                 try:
                     response.direct_passthrough = False
                     response.stream.close()

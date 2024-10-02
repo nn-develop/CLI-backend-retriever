@@ -6,8 +6,18 @@ from rest_client import RestClient
 from config import BACKEND_REST, BACKEND_GRPC, DEFAULT_REST_URL, DEFAULT_GRPC_SERVER, DEFAULT_SERVER_TYPE, DEFAULT_OUTPUT
 
 class FileClient:
+    """
+    Client for interacting with file backend (REST or gRPC).
+    """
     def __init__(self, backend, rest_base_url=None, grpc_server=None, output=None):
-        """Initialize FileClient with backend and configurations."""
+        """
+        Initialize the FileClient with the given backend.
+        
+        :param backend: Type of backend (REST or gRPC).
+        :param rest_base_url: Base URL for the REST server.
+        :param grpc_server: Address of the gRPC server.
+        :param output: Output file path or '-' for stdout.
+        """
         self.backend = backend
         self.output = output or DEFAULT_OUTPUT
         
@@ -19,24 +29,41 @@ class FileClient:
             raise ValueError(f"Unknown backend: {self.backend}")
 
     def stat(self, uuid):
-        """Retrieve and print file metadata."""
+        """
+        Print metadata of the file identified by UUID.
+        
+        :param uuid: UUID of the file.
+        """
         stat_data = self.client.get_file_stat(uuid)
         self._print_stat(stat_data)
 
     def read(self, uuid):
-        """Read file content by UUID."""
+        """
+        Read and output the content of the file identified by UUID.
+        
+        :param uuid: UUID of the file.
+        """
         file_name, file_content = self.client.read_file(uuid)
         self._write_output(file_content, file_name)
 
     def _print_stat(self, stat_data):
-        """Print file metadata to console."""
+        """
+        Print file metadata.
+        
+        :param stat_data: Metadata dictionary of the file.
+        """
         print(f"Name: {stat_data['name']}")
         print(f"Size: {stat_data['size']} bytes")
         print(f"Created: {stat_data['create_datetime']}")
         print(f"MIME Type: {stat_data['mimetype']}")
 
     def _write_output(self, content, file_name):
-        """Write file content to the specified output."""
+        """
+        Write file content to the output destination.
+        
+        :param content: Content of the file.
+        :param file_name: Name of the file.
+        """
         if self.output == '-':
             sys.stdout.buffer.write(content)
         else:
@@ -44,7 +71,9 @@ class FileClient:
                 f.write(content)
 
 def main():
-    """Main function for parsing arguments and executing commands."""
+    """
+    Parse command line arguments and execute the appropriate client command.
+    """
     parser = argparse.ArgumentParser(
         description='CLI client to interact with REST or gRPC server.\n'
                     'Usage: file-client [options] stat UUID\n'
@@ -72,7 +101,6 @@ def main():
 
     args = parser.parse_args()
 
-    """Initialize FileClient and execute the given command."""
     client = FileClient(
         backend=args.backend,
         rest_base_url=args.base_url,

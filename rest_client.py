@@ -1,12 +1,23 @@
 import requests
 
 class RestClient:
+    """
+    Client for interacting with a REST API to manage files.
+    """
     def __init__(self, base_url):
-        """Initialize RestClient with base URL."""
+        """
+        Initialize RestClient with base URL.
+        
+        :param base_url: Base URL for the REST API.
+        """
         self.base_url = base_url
 
     def get_file_stat(self, uuid):
-        """Get file metadata by UUID."""
+        """
+        Get file metadata by UUID.
+        
+        :param uuid: UUID of the file.
+        """
         url = f"{self.base_url}/file/{uuid}/stat/"
         response = requests.get(url)
         if response.status_code == 200:
@@ -17,7 +28,11 @@ class RestClient:
             response.raise_for_status()
 
     def read_file(self, uuid):
-        """Read file content by UUID."""
+        """
+        Read file content by UUID.
+        
+        :param uuid: UUID of the file.
+        """
         url = f"{self.base_url}/file/{uuid}/read/"
         response = requests.get(url)
         if response.status_code == 200:
