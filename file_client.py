@@ -7,6 +7,7 @@ from config import BACKEND_REST, BACKEND_GRPC, DEFAULT_REST_URL, DEFAULT_GRPC_SE
 
 class FileClient:
     def __init__(self, backend, rest_base_url=None, grpc_server=None, output=None):
+        """Initialize FileClient with backend and configurations."""
         self.backend = backend
         self.output = output or DEFAULT_OUTPUT
         
@@ -18,20 +19,24 @@ class FileClient:
             raise ValueError(f"Unknown backend: {self.backend}")
 
     def stat(self, uuid):
+        """Retrieve and print file metadata."""
         stat_data = self.client.get_file_stat(uuid)
         self._print_stat(stat_data)
 
     def read(self, uuid):
+        """Read file content by UUID."""
         file_name, file_content = self.client.read_file(uuid)
         self._write_output(file_content, file_name)
 
     def _print_stat(self, stat_data):
+        """Print file metadata to console."""
         print(f"Name: {stat_data['name']}")
         print(f"Size: {stat_data['size']} bytes")
         print(f"Created: {stat_data['create_datetime']}")
         print(f"MIME Type: {stat_data['mimetype']}")
 
     def _write_output(self, content, file_name):
+        """Write file content to the specified output."""
         if self.output == '-':
             sys.stdout.buffer.write(content)
         else:
@@ -39,6 +44,7 @@ class FileClient:
                 f.write(content)
 
 def main():
+    """Main function for parsing arguments and executing commands."""
     parser = argparse.ArgumentParser(
         description='CLI client to interact with REST or gRPC server.\n'
                     'Usage: file-client [options] stat UUID\n'
@@ -66,6 +72,7 @@ def main():
 
     args = parser.parse_args()
 
+    """Initialize FileClient and execute the given command."""
     client = FileClient(
         backend=args.backend,
         rest_base_url=args.base_url,
