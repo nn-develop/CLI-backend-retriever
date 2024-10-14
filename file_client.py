@@ -2,6 +2,7 @@
 import sys
 import argparse
 from rest_client import RestClient
+from grpc_client import GrpcClient
 # from grpc_client import GrpcClient
 from config import BACKEND_REST, BACKEND_GRPC, DEFAULT_REST_URL, DEFAULT_GRPC_SERVER, DEFAULT_SERVER_TYPE, DEFAULT_OUTPUT
 
@@ -23,8 +24,8 @@ class FileClient:
         
         if self.backend == BACKEND_REST:
             self.client = RestClient(base_url=rest_base_url or DEFAULT_REST_URL)
-        # elif self.backend == BACKEND_GRPC:
-        #     self.client = GrpcClient(server_address=grpc_server or DEFAULT_GRPC_SERVER)
+        elif self.backend == BACKEND_GRPC:
+            self.client = GrpcClient(server_address=grpc_server or DEFAULT_GRPC_SERVER)
         else:
             raise ValueError(f"Unknown backend: {self.backend}")
 
