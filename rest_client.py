@@ -20,12 +20,14 @@ class RestClient:
         """
         url = f"{self.base_url}/file/{uuid}/stat/"
         response = requests.get(url)
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 404:
-            raise FileNotFoundError(f"File with UUID {uuid} not found.")
-        else:
-            response.raise_for_status()
+        match response.status_code:
+            case 200:
+                return response.json()
+            case 404:
+                raise FileNotFoundError(f"File with UUID {uuid} not found.")
+            case _:
+                response.raise_for_status()
+
 
     def read_file(self, uuid):
         """
@@ -35,11 +37,17 @@ class RestClient:
         """
         url = f"{self.base_url}/file/{uuid}/read/"
         response = requests.get(url)
-        if response.status_code == 200:
-            file_name = response.headers.get('Content-Disposition', 'file')
-            file_content = response.content
-            return file_name, file_content
-        elif response.status_code == 404:
-            raise FileNotFoundError(f"File with UUID {uuid} not found.")
-        else:
-            response.raise_for_status()
+        match response.status_code:
+            case 200:
+                disposition = response.headers.get('Content-Disposition', '')
+                if 'filename=' in disposition:
+                    file_name = disposition.split('filename=')[-1].strip('"')
+                else:
+                    file_name = 'unknown_filename'
+                file_content = response.content
+                return file_name, file_content
+
+            case 404:
+                raise FileNotFoundError(f"File with UUID {uuid} not found.")
+            case _:
+                response.raise_for_status()

@@ -10,7 +10,7 @@ class FileClient:
     """
     Client for interacting with file backend (REST or gRPC).
     """
-    def __init__(self, backend, rest_base_url=None, grpc_server=None, output=None):
+    def __init__(self, backend: str, rest_base_url: str = None, grpc_server: str = None, output: str = None) -> None:
         """
         Initialize the FileClient with the given backend.
         
@@ -19,35 +19,39 @@ class FileClient:
         :param grpc_server: Address of the gRPC server.
         :param output: Output file path or '-' for stdout.
         """
-        self.backend = backend
-        self.output = output or DEFAULT_OUTPUT
-        
-        if self.backend == BACKEND_REST:
-            self.client = RestClient(base_url=rest_base_url or DEFAULT_REST_URL)
-        elif self.backend == BACKEND_GRPC:
-            self.client = GrpcClient(server_address=grpc_server or DEFAULT_GRPC_SERVER)
-        else:
-            raise ValueError(f"Unknown backend: {self.backend}")
+        self.output: str = output or DEFAULT_OUTPUT
 
-    def stat(self, uuid):
+        backend_clients = {
+            BACKEND_REST: lambda: RestClient(rest_base_url or DEFAULT_REST_URL),
+            BACKEND_GRPC: lambda: GrpcClient(grpc_server or DEFAULT_GRPC_SERVER)
+        }
+
+        try:
+            self.client = backend_clients[backend]()
+        except KeyError:
+            raise ValueError(f"Unknown backend: {backend}")
+
+    def stat(self, uuid: str) -> None:
         """
         Print metadata of the file identified by UUID.
         
         :param uuid: UUID of the file.
         """
-        stat_data = self.client.get_file_stat(uuid)
+        stat_data: dict = self.client.get_file_stat(uuid)
         self._print_stat(stat_data)
 
-    def read(self, uuid):
+    def read(self, uuid: str) -> None:
         """
         Read and output the content of the file identified by UUID.
         
         :param uuid: UUID of the file.
         """
+        file_name: str
+        file_content: bytes
         file_name, file_content = self.client.read_file(uuid)
         self._write_output(file_content, file_name)
 
-    def _print_stat(self, stat_data):
+    def _print_stat(self, stat_data: dict) -> None:
         """
         Print file metadata.
         
@@ -58,7 +62,7 @@ class FileClient:
         print(f"Created: {stat_data['create_datetime']}")
         print(f"MIME Type: {stat_data['mimetype']}")
 
-    def _write_output(self, content, file_name):
+    def _write_output(self, content: bytes, file_name: str) -> None:
         """
         Write file content to the output destination.
         
@@ -66,12 +70,12 @@ class FileClient:
         :param file_name: Name of the file.
         """
         if self.output == '-':
-            sys.stdout.buffer.write(content)
+            sys.stdout.write(content.decode('utf-8', errors='replace'))
         else:
             with open(self.output, 'wb') as f:
                 f.write(content)
 
-def main():
+def main() -> None:
     """
     Parse command line arguments and execute the appropriate client command.
     """
@@ -102,7 +106,7 @@ def main():
 
     args = parser.parse_args()
 
-    client = FileClient(
+    client: FileClient = FileClient(
         backend=args.backend,
         rest_base_url=args.base_url,
         grpc_server=args.grpc_server,

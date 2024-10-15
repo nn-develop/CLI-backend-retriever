@@ -3,7 +3,7 @@ import os
 import logging
 
 # Base directory of the application
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR: str = os.path.dirname(os.path.abspath(__file__))
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 class FileMetadata:
     """Represents the metadata of a file."""
     
-    def __init__(self, uuid, create_datetime, size, mimetype, name, path):
+    def __init__(self, uuid: str, create_datetime: str, size: int, mimetype: str, name: str, path: str) -> None:
         """
         Initialize file metadata.
 
@@ -45,7 +45,7 @@ class FileMetadata:
 class FileService:
     """Provides services for managing files."""
     
-    def __init__(self, files_metadata: dict = None):
+    def __init__(self, files_metadata: dict[str, FileMetadata] = None) -> None:
         """
         Initialize the file service with metadata.
 
@@ -69,7 +69,7 @@ class FileService:
         """
         self.files_metadata.pop(uuid, None)
 
-    def get_file_metadata(self, uuid: str) -> FileMetadata:
+    def get_file_metadata(self, uuid: str) -> FileMetadata | None:
         """
         Return the metadata of a file by its UUID.
 
@@ -86,12 +86,12 @@ class FileService:
         :return: True if the file exists, False otherwise.
         """
         file_data = self.get_file_metadata(uuid)
-        return file_data and os.path.exists(file_data.path)
+        return file_data is not None and os.path.exists(file_data.path)
 
 class FileAPI:
     """Handles API routes for file operations."""
 
-    def __init__(self, app: Flask, file_service: FileService):
+    def __init__(self, app: Flask, file_service: FileService) -> None:
         """
         Initialize the FileAPI with a Flask app and file service.
 
@@ -167,7 +167,7 @@ class FileAPI:
 app = Flask(__name__)
 
 # Predefined metadata for testing
-initial_metadata = {
+initial_metadata: dict[str, FileMetadata] = {
     "1234": FileMetadata(
         uuid="1234",
         create_datetime="2023-09-20T12:34:56Z",
