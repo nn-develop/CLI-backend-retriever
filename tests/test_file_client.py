@@ -8,9 +8,9 @@ class TestFileClient(unittest.TestCase):
     def setUp(self) -> None:
         self.client: FileClient = FileClient(backend='rest', output='output.txt')
 
-    @patch('builtins.print')
-    def test_print_stat(self, mock_print: Mock) -> None:
-        """Positive test: Should correctly print file statistics."""
+    @patch('builtins.open', new_callable=mock_open)
+    def test_stat_write_output_to_file(self, mock_file: Mock) -> None:
+        """Test if stat method correctly writes metadata to a file."""
         stat_data: dict = {
             'name': 'example.txt',
             'size': 12345,
@@ -18,16 +18,49 @@ class TestFileClient(unittest.TestCase):
             'mimetype': 'text/plain'
         }
 
-        self.client._print_stat(stat_data)
+        with patch.object(self.client, 'client') as mock_client:
+            mock_client.get_file_stat.return_value = stat_data
 
-        mock_print.assert_any_call("Name: example.txt")
-        mock_print.assert_any_call("Size: 12345 bytes")
-        mock_print.assert_any_call("Created: 2023-09-20T12:34:56Z")
-        mock_print.assert_any_call("MIME Type: text/plain")
+            self.client.stat('some-uuid')
+
+            expected_output = (
+                "Name: example.txt\n"
+                "Size: 12345 bytes\n"
+                "Created: 2023-09-20T12:34:56Z\n"
+                "MIME Type: text/plain\n"
+            ).encode('utf-8')
+
+            mock_file.assert_called_once_with('output.txt', 'wb')
+            mock_file().write.assert_called_once_with(expected_output)
+
+    @patch('builtins.open', new_callable=mock_open)
+    def test_stat_write_output_to_stdout(self, mock_file: Mock) -> None:
+        """Test if stat method correctly writes metadata to stdout when output is '-'."""
+        self.client.output = '-'
+        stat_data: dict = {
+            'name': 'example.txt',
+            'size': 12345,
+            'create_datetime': '2023-09-20T12:34:56Z',
+            'mimetype': 'text/plain'
+        }
+
+        with patch.object(self.client, 'client') as mock_client:
+            mock_client.get_file_stat.return_value = stat_data
+
+            with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+                self.client.stat('some-uuid')
+                
+                expected_output = (
+                    "Name: example.txt\n"
+                    "Size: 12345 bytes\n"
+                    "Created: 2023-09-20T12:34:56Z\n"
+                    "MIME Type: text/plain\n"
+                )
+                self.assertEqual(mock_stdout.getvalue(), expected_output)
 
     @patch('builtins.open', new_callable=mock_open)
     def test_write_output_to_file(self, mock_file: Mock) -> None:
-        """Positive test: Should correctly write content to a file."""
+        """Test if write_output correctly writes content to a file."""
         file_name: str = 'output.txt'
         file_content: bytes = b'File content here.'
 
@@ -38,7 +71,7 @@ class TestFileClient(unittest.TestCase):
 
     @patch('builtins.open', new_callable=mock_open)
     def test_write_output_to_stdout(self, mock_file: Mock) -> None:
-        """Positive test: Should correctly write content to stdout."""
+        """Test if write_output correctly writes content to stdout."""
         self.client.output = '-'
         file_name: str = 'example.txt'
         file_content: bytes = b'File content here.'

@@ -33,12 +33,14 @@ class FileClient:
 
     def stat(self, uuid: str) -> None:
         """
-        Print metadata of the file identified by UUID.
+        Retrieve and output metadata of the file identified by UUID.
         
         :param uuid: UUID of the file.
         """
         stat_data: dict = self.client.get_file_stat(uuid)
-        self._print_stat(stat_data)
+        stat_output: str = self._format_stat(stat_data)
+        self._write_output(stat_output.encode('utf-8'), f"{uuid}_stat.txt")
+
 
     def read(self, uuid: str) -> None:
         """
@@ -51,16 +53,17 @@ class FileClient:
         file_name, file_content = self.client.read_file(uuid)
         self._write_output(file_content, file_name)
 
-    def _print_stat(self, stat_data: dict) -> None:
+    def _format_stat(self, stat_data: dict) -> str:
         """
-        Print file metadata.
+        Format file metadata into a string.
         
         :param stat_data: Metadata dictionary of the file.
+        :return: Formatted metadata as a string.
         """
-        print(f"Name: {stat_data['name']}")
-        print(f"Size: {stat_data['size']} bytes")
-        print(f"Created: {stat_data['create_datetime']}")
-        print(f"MIME Type: {stat_data['mimetype']}")
+        return (f"Name: {stat_data['name']}\n"
+                f"Size: {stat_data['size']} bytes\n"
+                f"Created: {stat_data['create_datetime']}\n"
+                f"MIME Type: {stat_data['mimetype']}\n")
 
     def _write_output(self, content: bytes, file_name: str) -> None:
         """
